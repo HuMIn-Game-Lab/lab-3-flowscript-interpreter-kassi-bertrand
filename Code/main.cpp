@@ -2,13 +2,14 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <cstdlib>
 
-#include "../lib/jobsystem.h"
-#include "../lib/json.hpp"
+#include "lib/jobsystem.h"
+#include "lib/json.hpp"
 
-#include "compilejob.h"
-#include "parsingjob.h"
-#include "jsonjob.h"
+#include "Jobs/compilejob.h"
+#include "Jobs/parsingjob.h"
+#include "Jobs/jsonjob.h"
 
 int main(int argc, char const *argv[])
 {

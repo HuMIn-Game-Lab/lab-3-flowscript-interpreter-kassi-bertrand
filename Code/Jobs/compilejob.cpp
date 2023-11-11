@@ -111,3 +111,9 @@ void CompileJob::setOutputJson(const json& json){
 json CompileJob::GetOutputJson() const{
     return m_outputJson;
 }
+
+extern "C" {
+    void* CreateCompileJob(const char* jsonData) {
+        return new CompileJob(jsonData);
+    }
+}

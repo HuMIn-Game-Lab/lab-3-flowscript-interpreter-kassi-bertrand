@@ -76,7 +76,7 @@ public:
         }
     }
 
-    Job* CreateJob(const std::string& jobTypeIdentifier, const json& jsonData); // Returns an instance of a job based on type identifier. This function implements the FACTORY pattern.
+    Job* CreateJob(const std::string jobTypeIdentifier, const json& jsonData); // Returns an instance of a job based on type identifier. This function implements the FACTORY pattern.
 
     std::vector<std::string> GetRegisteredJobTypes() const; // Returns a list of registered job types in the job system
 
@@ -122,6 +122,7 @@ extern "C"{
     void FinishCompletedJobs(JobSystemHandle jobsystem);
     void QueueJob(JobSystemHandle jobsystem, JobHandle jobHandle);
     int GetJobStatus(JobSystemHandle jobsystem, int jobID);
+    int GetJobID(JobSystemHandle jobsystem, JobHandle jobHandle);
     void AddDependency(JobHandle dependentHandle, JobHandle dependencyHandle);
 
     // Register job types
@@ -134,5 +135,8 @@ extern "C"{
     // Job details
     void GetJobDetails(JobSystemHandle jobsystem);
 
+
+    // Initialize the library
+    void InitJobSystem();
 
 }

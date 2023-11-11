@@ -1,0 +1,9 @@
+digraph FlowScript {
+    A[jobType="COMPILE_JOB" shape=circle input=job_input];
+    B[jobType="COMPILE_JOB" shape=circle input=job_input];
+    C[jobType="COMPILE_JOB" shape=circle input=job_input];
+    D[jobType="COMPILE_JOB" shape=circle input=job_input];
+    E[jobType="COMPILE_JOB" shape=circle input=job_input]
+    
+    A -> B -> C -> D -> E;
+}

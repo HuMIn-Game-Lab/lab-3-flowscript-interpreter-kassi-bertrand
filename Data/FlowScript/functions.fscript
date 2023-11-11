@@ -1,0 +1,30 @@
+digraph FlowScript {
+
+    // Try to uncomment the commented line, you will get some errors
+
+      subgraph test {
+        // node [style=filled]; // Set default node style to filled for the subgraph
+        // edge [style=dashed]; // Set default edge style to dashed for the subgraph
+
+        A[jobType="COMPILE_JOB" shape=circle input=job_input];
+        B[jobType="COMPILE_JOB" shape=circle input=job_input];
+        C[jobType="COMPILE_JOB" shape=circle input=job_input];
+        D[jobType="COMPILE_JOB" shape=circle input=job_input];
+
+        A -> B;
+        B -> C;
+        C -> D;
+        // label = "process name";
+        // color=blue;
+    }
+
+    A[jobType="COMPILE_JOB" shape=circle input=job_input];
+    B[jobType="COMPILE_JOB" shape=circle input=job_input];
+    C[jobType="COMPILE_JOB" shape=circle input=job_input];
+    D[jobType="COMPILE_JOB" shape=circle input=job_input];
+    E[jobType="COMPILE_JOB" shape=circle input=job_input];
+    
+    A -> B -> C -> D -> E;
+}
+
+

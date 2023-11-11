@@ -6,6 +6,10 @@
 #include "jobsystem.h"
 #include "jobworkerthread.h"
 
+#include "../Jobs/compilejob.h"
+#include "../Jobs/parsingjob.h"
+#include "../Jobs/jsonjob.h"
+
 // static variable are initialized in the cpp
 JobSystem* JobSystem::s_jobSystem = nullptr;
 
@@ -335,7 +339,7 @@ json JobSystem::GetJsonJobOutputByID(int jobID) const{
     return jobOutput;
 }
 
-Job* JobSystem::CreateJob(const std::string& jobTypeIdentifier, const json& jsonData){
+Job* JobSystem::CreateJob(const std::string jobTypeIdentifier, const json& jsonData){
     auto it = m_jobTypeFactories.find(jobTypeIdentifier);
     if(it != m_jobTypeFactories.end()){
         auto& factoryFunction = it->second;
@@ -369,6 +373,11 @@ extern "C"{
     void CreateWorkerThreads(JobSystemHandle jobSystem){
         JobSystem *js = reinterpret_cast<JobSystem*>(jobSystem);
 
+        if (js == nullptr){
+            std::cout << "here" << std::endl;
+
+        }
+
         js->CreateWorkerThread(JobSystem::generateRandomThreadWorkerName(), 0x10000000); // Dedicated worker threads for COMPILE jobs
         js->CreateWorkerThread(JobSystem::generateRandomThreadWorkerName(), 0x10000000);
 
@@ -382,7 +391,8 @@ extern "C"{
     }
 
     JobHandle CreateJob(JobSystemHandle jobSystem, const char* jobTypeIdentifier, const char* jsonData){
-        Job* job = reinterpret_cast<JobSystem*>(jobSystem)->CreateJob(jobTypeIdentifier, json::parse(jsonData));
+        std::string id = jobTypeIdentifier;
+        Job* job = reinterpret_cast<JobSystem*>(jobSystem)->CreateJob(id, json::parse(jsonData));
         return reinterpret_cast<JobHandle>(job);
     }
 
@@ -403,6 +413,11 @@ extern "C"{
 
     int GetJobStatus(JobSystemHandle jobsystem, int jobID){
         return reinterpret_cast<JobSystem*>(jobsystem)->GetJobStatus(jobID);
+    }
+
+    int GetJobID(JobSystemHandle jobsystem, JobHandle jobHandle){
+        Job* job = reinterpret_cast<Job*>(jobHandle);
+        return job->GetUniqueID();
     }
 
     void AddDependency(JobHandle dependentHandle, JobHandle dependencyHandle){
@@ -466,5 +481,38 @@ extern "C"{
 
     void GetJobDetails(JobSystemHandle jobsystem){
         reinterpret_cast<JobSystem*>(jobsystem)->GetJobDetails();
+    }
+
+    void InitJobSystem(){
+
+        // Register jobs
+
+        std::function<Job* (const char *)> compileJobFactory = [](const char *jsonData) -> Job* {
+            return new CompileJob(jsonData);
+        };
+
+        std::function<Job* (const char *)> parsingJobFactory = [](const char *jsonData) -> Job* {
+            return new ParsingJob(jsonData);
+        };
+
+        std::function<Job* (const char *)> jsonJobFactory = [](const char *jsonData) -> Job* {
+            return new JsonJob(jsonData);
+        };
+
+        JobSystem::CreateOrGet()->RegisterJobType("COMPILE_JOB", compileJobFactory);
+        JobSystem::CreateOrGet()->RegisterJobType("PARSING_JOB", parsingJobFactory);
+        JobSystem::CreateOrGet()->RegisterJobType("JSON_JOB", jsonJobFactory);
+
+        // Kick off worker threads
+        JobSystem::CreateOrGet()->CreateWorkerThread(JobSystem::generateRandomThreadWorkerName(), 0x10000000); // Dedicated worker threads for COMPILE jobs
+        JobSystem::CreateOrGet()->CreateWorkerThread(JobSystem::generateRandomThreadWorkerName(), 0x10000000);
+
+        JobSystem::CreateOrGet()->CreateWorkerThread(JobSystem::generateRandomThreadWorkerName(), 0x20000000); // Dedicated worker threads for PARSING jobs
+        JobSystem::CreateOrGet()->CreateWorkerThread(JobSystem::generateRandomThreadWorkerName(), 0x20000000);
+
+        JobSystem::CreateOrGet()->CreateWorkerThread(JobSystem::generateRandomThreadWorkerName(), 0x40000000); // Dedicated worker threads for JSON jobs
+        JobSystem::CreateOrGet()->CreateWorkerThread(JobSystem::generateRandomThreadWorkerName(), 0x40000000);
+
+        JobSystem::CreateOrGet()->CreateWorkerThread(JobSystem::generateRandomThreadWorkerName(), 0x8000000); // Dedicated worker threads for ANY other jobs
     }
 }

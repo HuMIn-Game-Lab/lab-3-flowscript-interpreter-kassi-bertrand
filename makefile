@@ -1,9 +1,9 @@
 libLinux:
-	clang++ -shared -std=c++17 -o ./Code/lib/libjobsystem.so -fPIC ./Code/lib/*.cpp
-	
+	clang++ -shared -std=c++17 -o ./Code/lib/libjobsystem.so -fPIC ./Code/lib/*.cpp ./Code/Jobs/*.cpp
+
 compile:
-	clang++ -shared -std=c++17 -o ./Code/lib/libjobsystem.so -fPIC ./Code/lib/*.cpp
-	clang++ -g -std=c++17 -o output.out ./Code/exec/*.cpp -L./Code/lib -ljobsystem
+	clang++ -shared -std=c++17 -o ./Code/lib/libjobsystem.so -fPIC ./Code/lib/*.cpp ./Code/Jobs/*.cpp
+	clang++ -g -std=c++17 -o output.out ./Code/main.cpp -L./Code/lib -ljobsystem
 
 run:
 	./output.out
