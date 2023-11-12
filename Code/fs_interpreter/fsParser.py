@@ -151,7 +151,7 @@ class Parser:
         identifier: Token = self.previous()
         self.consume(TokenType.EQUAL, "Expect '='. Variables must be initialized")
         initializer: Expr = self.assignment() # initializer should be of type 'STRING' or 'Variable'
-        self.consume(TokenType.SEMICOLON, "Expect ';' at the end of statement")        
+        self.consume(TokenType.SEMICOLON, "Expect ';' at the end of statement")     
         return Stmt.Var(identifier, initializer)
 
     def func_decl_statement(self):

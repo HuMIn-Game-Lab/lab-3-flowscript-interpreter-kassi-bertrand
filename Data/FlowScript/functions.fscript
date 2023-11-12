@@ -2,7 +2,7 @@ digraph FlowScript {
 
     // Try to uncomment the commented line, you will get some errors
 
-      subgraph test {
+      subgraph car {
         // node [style=filled]; // Set default node style to filled for the subgraph
         // edge [style=dashed]; // Set default edge style to dashed for the subgraph
 

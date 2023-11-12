@@ -1,9 +1,4 @@
 digraph FlowScript {
-
-    car_sd = "TEST";
-    car = "Not allowed";
-
-
     A[jobType="COMPILE_JOB" shape=circle input=job_input];
     B[jobType="COMPILE_JOB" shape=circle input=job_input];
     C[jobType="COMPILE_JOB" shape=circle input=job_input];
