@@ -56,25 +56,63 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
 
     def visit_dependency_stmt(self, stmt: Stmt.Dependency):
         # For each dependencies
-        # Check if both name exist
-        # if not raise runtime error
+        dependencies = stmt.dependencies
+        for dependency in dependencies:
+            source = dependency[0]
+            target = dependency [1]
+
+            # ensure both identifier exist
+            if not self.environment.exist(source):
+                raise runtimeError(source, f"[Line: {source.line}]: Job '{source.lexeme}' was never declared. Declare it before you establishing dependency.")
+            if not self.environment.exist(target):
+                raise runtimeError(source, f"[Line: {target.line}]: {target.lexeme} was never declared. Declare it before you establishing dependency.")
+      
         
-        # in hub Add source to target dependency list
-        print("Depdency declared")
-        pass
+        # TODO: in hub Add source to target dependency list
+        return None
 
     def visit_conditionaljob_stmt(self, stmt: Stmt.ConditionalJob):
-        # Check if identifer does not already exist
-        # register it in the environemnt
-        # Store the job in the hub
-        print("Conditional job declared")
-        pass
+        job = {
+            "name": stmt.job_identifier,
+            "test_type": stmt.test_type,
+            "job_if_true": stmt.if_true_job_id,
+            "job_if_false": stmt.else_job_id
+        }
+
+        # Ensure conditional job identifier is unique
+        if self.environment.exist(job["name"]):
+            name = job["name"]
+            raise runtimeError(name, f"[Line: {name.line}]: Identifier '{name.lexeme}' is being reused. Identifiers must be unique")
+        else:
+            self.environment.define(job["name"].lexeme, "CONDITIONAL_JOB")
+        
+        # Ensure other identifiers have declared before being used in the conditional job declaration
+        if not self.environment.exist(job["job_if_true"]):
+            name = job["job_if_true"]
+            raise runtimeError(name, f"[Line: {name.line}]: Job identifier '{name.lexeme}' has never been declared. Make sure to declare it before referring to it.")
+        
+        if not self.environment.exist(job["job_if_false"]):
+            name = job["job_if_false"]
+            raise runtimeError(name, f"[Line: {name.line}]: Job identifier '{name.lexeme}' has never been declared. Make sure to declare it before referring to it.")
+        
+        # TODO Store the job in the hub
+        return None
     
     def visit_jobdeclaration_stmt(self, stmt: Stmt.JobDeclaration):
-        # TODO Check if job name is does not already exist
-        # Raise runtime error if it does
-        # TODO Register the name of the job in the environment
-        # Store the job in the hub
+        job = {
+            "name": stmt.job_identifier,
+            "type": stmt.job_type,
+            "input": stmt.input
+        }
+        
+        # If a job with the same identifier has declared already...
+        if self.environment.exist(job["name"]):
+            name = job["name"]
+            raise runtimeError(name, f"[Line: {name.line}]: Identifier '{name.lexeme}' is being reused. Identifiers must be unique")
+        else:
+            self.environment.define(job["name"].lexeme, "COMPILE_JOB")
+        
+        # TODO Store the job in the hub
         return None
     
     # CLASS HELPERS
@@ -88,10 +126,11 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
         for statement in statements:
             self.execute(statement)
 
+    # TO BE DELETED
     def print(self):
         self.environment.print()
-    
-    
+
+
     # submit jobs to the job system
-    def schedule_job(self):
+    def schedule_jobs(self):
         pass

@@ -19,8 +19,11 @@ class Parser:
 
     def parse(self):
         statements = []
-        while not self.is_at_end():
-            statements.append(self.declaration())
+
+        # This is the program entry point. It is also the beginning of the recursive descent.
+        if self.match(TokenType.DIGRAPH):
+            statements.append(self.flow_script_entry_point())
+
         return statements
     
     # GRAMMAR RULES implementation for EXPRESSIONS
@@ -56,13 +59,9 @@ class Parser:
         # Raise a Parse Error we are dealing with something we don't know
         raise self.error(self.peek(), "Unexpected expression.")
 
-
     # GRAMMAR RULES implementation for STATEMENTS
     def declaration(self):
         try:
-            # This is the program entry point.
-            if self.match(TokenType.DIGRAPH):
-                return self.flow_script_entry_point()
             
             # At this point, we don't know which type of statement. So, we check
             if self.match(TokenType.IDENTIFIER):
@@ -135,17 +134,17 @@ class Parser:
         # Parse the if_true part
         self.consume(TokenType.IF_TRUE, "Expect 'if_true' keyword.")
         self.consume(TokenType.EQUAL, "Expect '=' after 'if_true'.")
-        if_true_job_id = self.assignment()
+        if_true_job_id = self.consume(TokenType.IDENTIFIER, "Expect '=' after 'if_true'.")
 
         # parse the else part
         self.consume(TokenType.ELSE, "Expect 'else' keyword.")
         self.consume(TokenType.EQUAL, "Expect '=' after 'else'.")
-        else_job_id = self.assignment()
+        else_job_id = self.consume(TokenType.IDENTIFIER, "Expect identifier for 'else'.")
 
         self.consume(TokenType.RIGHT_BRACK, "Expect a closing ']' after the conditional job declaration.")
         self.consume(TokenType.SEMICOLON, "Semicolon expected at the end of statement.")
 
-        return Stmt.ConditionalJob(job_id, if_true_job_id, else_job_id)
+        return Stmt.ConditionalJob(job_id, test_type, if_true_job_id, else_job_id)
 
     def var_declaration_assignment(self):
         identifier: Token = self.previous()
@@ -174,11 +173,11 @@ class Parser:
 
         while self.match(TokenType.ARROW):
             # Parse the next identifier after each "->"
-            target = self.consume(TokenType.IDENTIFIER, "Expect target identifier in dependency")
+            target = self.consume_on_same_line(TokenType.IDENTIFIER, "Expect target identifier in dependency")
             dependencies.append((source, target))
             source = target # Update source for the next iteration
         
-        self.consume(TokenType.SEMICOLON, "Expect ';' after dependency declaration statement")
+        self.consume_on_same_line(TokenType.SEMICOLON, "Expect ';' after dependency declaration statement")
 
         # Return the statement object with all the dependencies arranged as tuples
         return Stmt.Dependency(dependencies)
