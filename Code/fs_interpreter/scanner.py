@@ -148,6 +148,10 @@ class Scanner:
         while self.peek() != '"' and not self.is_at_end():
             if self.peek() == '\n':
                 self.line += 1
+
+            # Handle "escaped" characters
+            if self.peek() == '\\' and self.peek_next() == '"':
+                self.advance()
             
             self.advance()
         
@@ -158,8 +162,8 @@ class Scanner:
         # The closing "
         self.advance()
 
-        # Trim the surrounding quotes.
-        value =  self.source[ self.start + 1: self.current - 1 ]
+        # Trim the surrounding quotes. And and most importantly, UNESCAPE "escaped" characters
+        value =  self.source[ self.start + 1: self.current - 1 ].replace('\\"', '"')
         self.add_token(TokenType.STRING, value)
 
     def number(self) -> None:

@@ -23,6 +23,14 @@ class Parser:
         # This is the program entry point. It is also the beginning of the recursive descent.
         if self.match(TokenType.DIGRAPH):
             statements.append(self.flow_script_entry_point())
+        else:
+            print("Malformed entry point")
+
+        # try:
+        #     self.consume(TokenType.DIGRAPH, "Expected digraph")
+        # except Exception as e:
+        #     pass
+
 
         return statements
     

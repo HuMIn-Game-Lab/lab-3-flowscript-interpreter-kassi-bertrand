@@ -1,0 +1,11 @@
+// FlowScript Showcasing variable usage
+
+ FlowScript {
+    compile_input = "{\"jobChannels\": 268435456, \"jobType\": 1, \"makefile\": \"./Data/testCode/Makefile\", \"isFilePath\": true}";
+    parsing_input = "{\"jobChannels\": 536870912, \"jobType\": 2, \"content\": \"\"}";
+
+    A[jobType="COMPILE_JOB" shape=circle input=compile_input];
+    B[jobType="PARSING_JOB" shape=circle input=parsing_input];
+
+    A -> B;
+}

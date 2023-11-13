@@ -1,15 +1,20 @@
 import Stmt
 import Expr
 import flowscript
+import json
+import ctypes
+from ctypes import CFUNCTYPE, c_void_p, POINTER, cdll, c_int, c_char_p, c_char
 
 from typing import List
 from runtimeError import runtimeError
 from Environment import Environment
+from job_sys_functions import *
 
 
 class Interpreter(Expr.Visitor, Stmt.Visitor):
     def __init__(self):
         self.environment = Environment()
+        self.staging_area = {} # Where jobs are placed BEFORE being submitted to the job system
 
     def interpret(self, statements: List[Stmt.Stmt]):
         self.total = len(statements)
@@ -17,6 +22,7 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
             for statement in statements:
                 self.execute(statement)
 
+            # Move jobs from the staging area to the job system.
             self.schedule_jobs()
         except runtimeError as error:
             flowscript.FlowScript.runtime_error(error)
@@ -67,8 +73,9 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
             if not self.environment.exist(target):
                 raise runtimeError(source, f"[Line: {target.line}]: {target.lexeme} was never declared. Declare it before you establishing dependency.")
       
-        
-        # TODO: in hub Add source to target dependency list
+        # Add "source" to the "target" dependency list
+        # NOTE: Target depends on source
+        self.staging_area[target.lexeme]["dependencies"].append(source.lexeme)
         return None
 
     def visit_conditionaljob_stmt(self, stmt: Stmt.ConditionalJob):
@@ -112,7 +119,27 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
         else:
             self.environment.define(job["name"].lexeme, "COMPILE_JOB")
         
-        # TODO Store the job in the hub
+        # After resolving identifier name, resolve variables in the statement as well.
+        json_input: str = self.evaluate(job["input"])
+
+        # Ensure, that the input is valid JSON
+        try:
+            json.loads(json_input)
+        except ValueError:
+            job_name = job["name"].lexeme
+            line_number = job["name"].line
+            raise runtimeError(job["input"], f"[Line: {line_number}]: The input of job '{job_name}' must be a valid JSON string")
+        
+        # Place the job in the "staging area"
+        tmp_dict = {
+            #"identifier": job["type"].lexeme.encode('utf-8'),
+            "type": job["type"].literal.encode('utf-8'),
+            "dependencies": [], # will put string identifier of jobs here later
+            "input": json_input.encode('utf-8') + b'\0'
+        }
+        
+        self.staging_area[ job["name"].lexeme ] = tmp_dict
+
         return None
     
     # CLASS HELPERS
@@ -133,4 +160,61 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
 
     # submit jobs to the job system
     def schedule_jobs(self):
-        pass
+        job_handles = {}
+
+        # Kick off the job system
+        job_system_handle = get_job_system_instance()
+        init_job_system()
+
+        # Create all job the jobs
+        for job_id_string, job_infos in self.staging_area.items():
+            job_identifier_cstr = ctypes.c_char_p(job_infos["type"])     
+            job_handle = create_job_func(job_system_handle, job_identifier_cstr, job_infos["input"])
+            
+            job_handles[job_id_string] = job_handle
+
+        # Attach dependencies
+        for job_id_string, job_infos in self.staging_area.items():
+            job_handle = job_handles[job_id_string]
+            
+            dependencies = job_infos["dependencies"]
+            for dep_id in dependencies:
+                dep_handle = job_handles[dep_id]
+
+                # NOTE: second job IS dependent on the first job.
+                add_dependency(job_handle, dep_handle)
+
+        # Submit all to the job system
+        print("\nInterpreter submitting jobs (˵ ͡° ͜ʖ ͡°˵): \n")
+        for job_id_string, job_handle in job_handles.items():
+            queue_job(job_system_handle, job_handle)
+            print(f"Job {job_id_string} SUBMITTED to the JOB SYSTEM") 
+        print("\n")
+        print("Your jobs are running. Interact with the job system to manipulate them ╰( ͡° ͜ʖ ͡° )つ──☆*: \n")
+
+        # The interpreter is DONE, a the job system interface for the user to interact
+        # with the job system and see their jobs
+        running = True
+        while running:
+            command = input("Enter: \"stop\", \"destroy\", \"finish\", \"status\", \"finishjob\", or \"job_types\", \"history\":\n")
+            
+            if command == "stop":
+                running = False
+            elif command == "destroy":
+                finish_jobs(job_system_handle)
+                destroy_job_system(job_system_handle)
+                running = False
+            elif command == "finish":
+                finish_jobs(job_system_handle)
+            elif command == "finishjob":
+                try:
+                    jobID = int(input("Enter ID of job to finish: "))
+                    finish_job(job_system_handle, jobID)
+                except ValueError:
+                    print("Invalid input. Please enter a valid job ID.")
+            elif command == "history":
+                get_job_details(job_system_handle)
+            else:
+                print("Invalid command")
+
+    

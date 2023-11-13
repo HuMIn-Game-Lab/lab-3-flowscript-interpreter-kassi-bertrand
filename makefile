@@ -11,5 +11,4 @@ run:
 clean:
 	find . -type f -name "*.out" -delete
 	find . -type d -name "*.dSYM" -exec rm -r {} +
-	find . -type d -name "*.vscode" -exec rm -r {} +
 	find ./Data -type f -name "*output.txt" -delete

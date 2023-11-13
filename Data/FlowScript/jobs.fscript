@@ -1,7 +1,11 @@
+// FlowScript Showcasing variable usage
+
 digraph FlowScript {
-    A[jobType="COMPILE_JOB" shape=circle input=job_input];
-    B[jobType="COMPILE_JOB" shape=circle input=job_input];
-    C[jobType="COMPILE_JOB" shape=circle input=job_input];
-    D[jobType="COMPILE_JOB" shape=circle input=job_input];
-    E[jobType="COMPILE_JOB" shape=circle input=job_input];
+    compile_input = "{\"jobChannels\": 268435456, \"jobType\": 1, \"makefile\": \"./Data/testCode/Makefile\", \"isFilePath\": true}";
+
+    A[jobType="COMPILE_JOB" shape=circle input=compile_input];
+    B[jobType="COMPILE_JOB" shape=circle input=compile_input];
+    C[jobType="COMPILE_JOB" shape=circle input=compile_input];
+    D[jobType="COMPILE_JOB" shape=circle input=compile_input];
+    E[jobType="COMPILE_JOB" shape=circle input=compile_input];
 }

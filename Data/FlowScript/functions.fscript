@@ -1,30 +1,33 @@
 digraph FlowScript {
 
     // Try to uncomment the commented line, you will get some errors
+    compile_input = "{\"jobChannels\": 268435456, \"jobType\": 1, \"makefile\": \"./Data/testCode/Makefile\", \"isFilePath\": true}";
+    eli = compile_input;
 
       subgraph car {
         // node [style=filled]; // Set default node style to filled for the subgraph
         // edge [style=dashed]; // Set default edge style to dashed for the subgraph
 
-        A[jobType="COMPILE_JOB" shape=circle input=job_input];
-        B[jobType="COMPILE_JOB" shape=circle input=job_input];
-        C[jobType="COMPILE_JOB" shape=circle input=job_input];
-        D[jobType="COMPILE_JOB" shape=circle input=job_input];
+        A[jobType="COMPILE_JOB" shape=circle input=compile_input];
+        B[jobType="COMPILE_JOB" shape=circle input=eli];
+        C[jobType="COMPILE_JOB" shape=circle input=compile_input];
+        D[jobType="COMPILE_JOB" shape=circle input=compile_input];
 
         A -> B;
         B -> C;
         C -> D;
         // label = "process name";
         // color=blue;
+
     }
 
-    A[jobType="COMPILE_JOB" shape=circle input=job_input];
-    B[jobType="COMPILE_JOB" shape=circle input=job_input];
-    C[jobType="COMPILE_JOB" shape=circle input=job_input];
-    D[jobType="COMPILE_JOB" shape=circle input=job_input];
-    E[jobType="COMPILE_JOB" shape=circle input=job_input];
+    E[jobType="COMPILE_JOB" shape=circle input=compile_input];
+    F[jobType="COMPILE_JOB" shape=circle input=compile_input];
+    G[jobType="COMPILE_JOB" shape=circle input=compile_input];
+    H[jobType="COMPILE_JOB" shape=circle input=compile_input];
+    I[jobType="COMPILE_JOB" shape=circle input=compile_input];
     
-    A -> B -> C -> D -> E;
+    E -> F -> G -> H -> I;
 }
 
 

@@ -22,11 +22,8 @@ job_system_lib = ctypes.CDLL(lib_path)
 get_job_system_instance = job_system_lib.GetJobSystemInstance
 get_job_system_instance.restype = JobSystemHandle
 
-# Function to init
+# Function to init and destroy the job system
 init_job_system = job_system_lib.InitJobSystem
-init_job_system.restype = JobSystemHandle
-
-# Function to destroy the job system
 destroy_job_system = job_system_lib.DestroyJobSystemInstance
 destroy_job_system.argtypes = [JobSystemHandle]
 destroy_job_system.restype = c_void_p
@@ -42,11 +39,15 @@ create_job.restype = JobHandle
 queue_job = job_system_lib.QueueJob
 queue_job.argtypes = [JobSystemHandle, JobHandle]
 
+# Function to add dependency
+add_dependency = job_system_lib.AddDependency
+add_dependency.argtypes = [JobHandle, JobHandle]
+
 # Function to finish a job
 finish_job = job_system_lib.FinishJob
 finish_job.argtypes = [JobSystemHandle, ctypes.c_int]
 
-# Function to get a job status
+# Function to get job status
 get_job_status = job_system_lib.GetJobStatus
 get_job_status.argtypes = [JobSystemHandle, ctypes.c_int]
 get_job_status.restype = ctypes.c_int
@@ -77,32 +78,46 @@ if __name__ == "__main__":
     # initialize job system
     init_job_system()
 
-    python_dict = {
+    # Creating a compile job
+    compile_input = {
         "jobChannels": 268435456,
         "jobType": 1,
         "makefile": "./Data/testCode/Makefile",
         "isFilePath": True
     }
 
-    # Encode the JSON data
-    json_string = json.dumps(python_dict)
-    json_bytes = json_string.encode('utf-8')
+    compile_json_string = json.dumps(compile_input)
+    compile_json_data = compile_json_string.encode('utf-8') + b'\0'
 
-    # Creating a job
-    job_type_identifier = "COMPILE_JOB"
-    job_type_identifier_bytes = job_type_identifier.encode('utf-8')
-    job_type_identifier_cstr = ctypes.c_char_p(b"COMPILE_JOB")
+    compile_job_identifier_bytes = "COMPILE_JOB".encode('utf-8')
+    compile_job_identifier_cstr = ctypes.c_char_p(compile_job_identifier_bytes)
+    print(compile_job_identifier_bytes)
+    compile_job = create_job_func(job_system_handle, compile_job_identifier_cstr, compile_json_data)
 
-    json_data_with_null_terminator = json_bytes + b'\0'
-    compile_job = create_job_func(job_system_handle, job_type_identifier_cstr, json_data_with_null_terminator)
+    # Creating a parsing job
+    parsing_input = {
+        "jobChannels": 536870912,
+        "jobType": 2,
+        "content": ""
+    }
+    
+    parsing_json_string = json.dumps(parsing_input)
+    parsing_json_data = parsing_json_string.encode('utf-8') + b'\0'
 
-    # Queuing the job
+    parsing_job_identifier = "PARSING_JOB".encode('utf-8')
+    parsing_job_identifier_cstr = ctypes.c_char_p(parsing_job_identifier)
+
+    parsing_job = create_job_func(job_system_handle, parsing_job_identifier_cstr, parsing_json_data)
+
+    # Add dependency
+    add_dependency(parsing_job, compile_job)
+
+    # Queuing the jobs
     queue_job(job_system_handle, compile_job)
+    queue_job(job_system_handle, parsing_job)
 
     # Display job distails
-    # NOTE: Will display an empty table because no job is running.
     running = True
-
     while running:
         command = input("Enter: \"stop\", \"destroy\", \"finish\", \"status\", \"finishjob\", or \"job_types\", \"history\":\n")
         

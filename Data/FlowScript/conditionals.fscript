@@ -1,3 +1,4 @@
+// FlowScript Showcasing conditional job usage
 digraph FlowScript {
 
   conditional[jobType="CONDITIONAL" shape=diamond test="ALL_SUCCESS" if_true=B else=End];

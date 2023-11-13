@@ -44,6 +44,9 @@ class FlowScript:
         if FlowScript.had_error:
             return
         
+        if len(statements) == 0:
+            return
+        
         # for token in tokens:
         #     print(token)
 
@@ -53,7 +56,7 @@ class FlowScript:
         interpreter.interpret(statements)
 
         # TO BE DELETED
-        interpreter.print()
+        # interpreter.print()
         
 
     @staticmethod
