@@ -33,6 +33,15 @@ void ParsingJob::Execute(){
         m_content = compileJobOutput["content"];
     } else {
         std::cout << "ERROR: No dependencies: Nothing to parse" << std::endl;
+
+        // Set Parsing Job Output
+        json parsingOutputJson;
+        parsingOutputJson["jobChannels"] = 1073741824; // 0x40000000
+        parsingOutputJson["jobType"] = 3;
+        parsingOutputJson["jsonContent"] = "";
+        parsingOutputJson["status"] = "failure";
+        setOutputJson(parsingOutputJson);
+
         return;
     }
     
@@ -118,6 +127,7 @@ void ParsingJob::Execute(){
     parsingOutputJson["jobChannels"] = 1073741824; // 0x40000000
     parsingOutputJson["jobType"] = 3;
     parsingOutputJson["jsonContent"] = m_parsedContent;
+    parsingOutputJson["status"] = "success";
     setOutputJson(parsingOutputJson);
 }
 

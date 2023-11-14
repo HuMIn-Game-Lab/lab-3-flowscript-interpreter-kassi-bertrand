@@ -101,8 +101,32 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
         if not self.environment.exist(job["job_if_false"]):
             name = job["job_if_false"]
             raise runtimeError(name, f"[Line: {name.line}]: Job identifier '{name.lexeme}' has never been declared. Make sure to declare it before referring to it.")
-        
-        # TODO Store the job in the hub
+
+        # Place job in staging area
+        tmp_dict = {
+            "type": "CONDITIONAL_JOB".encode('utf-8'),
+            "dependencies": [],
+            "input": json.dumps({
+                "logicalOperation": job["test_type"].literal,
+                "if_true_job_type": self.environment.get(job["job_if_true"]),
+                "else_type_job_type": self.environment.get(job["job_if_false"]),
+                "if_true_input": self.staging_area[ job["job_if_true"].lexeme ]["input"].decode('utf-8'), # Needs to be string
+                "else_input": self.staging_area[ job["job_if_false"].lexeme ]["input"].decode('utf-8'), # Needs to be string
+                "jobType": 4
+            }).encode('utf-8')
+        }
+
+        self.staging_area[ job["name"].lexeme ] = tmp_dict
+
+        # Since the jobs inside the conditional job declaration statement are to be queued by
+        # the conditional job ITSELF, we need to remove them from the staging area, so that
+        # the interpreter does NOT queue them to run BEFORE their time.
+        job_if_true = job["job_if_true"].lexeme
+        job_if_false = job["job_if_false"].lexeme
+
+        del self.staging_area[job_if_true]
+        del self.staging_area[job_if_false]
+
         return None
     
     def visit_jobdeclaration_stmt(self, stmt: Stmt.JobDeclaration):
@@ -168,11 +192,11 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
 
         # Create all job the jobs
         for job_id_string, job_infos in self.staging_area.items():
+
             job_identifier_cstr = ctypes.c_char_p(job_infos["type"])     
             job_handle = create_job_func(job_system_handle, job_identifier_cstr, job_infos["input"])
-            
             job_handles[job_id_string] = job_handle
-
+            
         # Attach dependencies
         for job_id_string, job_infos in self.staging_area.items():
             job_handle = job_handles[job_id_string]

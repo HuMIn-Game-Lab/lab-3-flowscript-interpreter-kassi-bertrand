@@ -16,6 +16,8 @@ void JsonJob::Execute(){
         json compileJobOutput = JobSystem::CreateOrGet()->GetJsonJobOutputByID(compileJobID);
         m_json = compileJobOutput["jsonContent"];
     } else {
+        m_json["status"] = "failure";
+        setOutputJson(m_json);
         std::cout << "ERROR: No dependencies: Nothing to work with" << std::endl;
         return;
     }
@@ -38,6 +40,7 @@ void JsonJob::Execute(){
     }
 
     // Set JSON job output
+    m_json["status"] = "success";
     setOutputJson(m_json);
 }
 

@@ -1,0 +1,18 @@
+clang++ -g -std=c++14 ./Data/testCode/*.cpp -o auto.out
+In file included from ./Data/testCode/functions.cpp:2:
+./Data/testCode/functions.h:5:18: error: expected ';' after top level declarator
+void printWorld()
+                 ^
+                 ;
+./Data/testCode/functions.cpp:9:19: error: expected expression
+    std::cout <<  << std::endl;
+                  ^
+2 errors generated.
+./Data/testCode/main.cpp:4:5: error: use of undeclared identifier 'printHello'
+    printHello();
+    ^
+./Data/testCode/main.cpp:5:5: error: use of undeclared identifier 'printWorld'
+    printWorld();
+    ^
+2 errors generated.
+make: *** [automated] Error 1

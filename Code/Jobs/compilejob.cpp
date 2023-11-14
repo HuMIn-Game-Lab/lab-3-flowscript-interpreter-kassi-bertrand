@@ -79,6 +79,7 @@ void CompileJob::Execute(){
     compilationOutputJson["jobChannels"] = 536870912; // 0x20000000
     compilationOutputJson["jobType"] = 2;
     compilationOutputJson["content"] = m_compilationOutput;
+    compilationOutputJson["status"] = "success";
     setOutputJson(compilationOutputJson);
 }
 

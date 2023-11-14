@@ -26,11 +26,6 @@ class Parser:
         else:
             print("Malformed entry point")
 
-        # try:
-        #     self.consume(TokenType.DIGRAPH, "Expected digraph")
-        # except Exception as e:
-        #     pass
-
 
         return statements
     

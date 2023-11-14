@@ -9,6 +9,7 @@
 #include "../Jobs/compilejob.h"
 #include "../Jobs/parsingjob.h"
 #include "../Jobs/jsonjob.h"
+#include "../Jobs/conditionaljob.h"
 
 // static variable are initialized in the cpp
 JobSystem* JobSystem::s_jobSystem = nullptr;
@@ -374,8 +375,8 @@ extern "C"{
         JobSystem *js = reinterpret_cast<JobSystem*>(jobSystem);
 
         if (js == nullptr){
-            std::cout << "here" << std::endl;
-
+            std::cout << "Job system is NOT intitialized" << std::endl;
+           return;
         }
 
         js->CreateWorkerThread(JobSystem::generateRandomThreadWorkerName(), 0x10000000); // Dedicated worker threads for COMPILE jobs
@@ -499,9 +500,14 @@ extern "C"{
             return new JsonJob(jsonData);
         };
 
+        std::function<Job* (const char*)> conditionalJobFactory = [](const char* jsonData) -> Job* {
+            return new LogicalConditionalJob(jsonData);
+        };
+
         JobSystem::CreateOrGet()->RegisterJobType("COMPILE_JOB", compileJobFactory);
         JobSystem::CreateOrGet()->RegisterJobType("PARSING_JOB", parsingJobFactory);
         JobSystem::CreateOrGet()->RegisterJobType("JSON_JOB", jsonJobFactory);
+        JobSystem::CreateOrGet()->RegisterJobType("CONDITIONAL_JOB", conditionalJobFactory);
 
         // Kick off worker threads
         JobSystem::CreateOrGet()->CreateWorkerThread(JobSystem::generateRandomThreadWorkerName(), 0x10000000); // Dedicated worker threads for COMPILE jobs
