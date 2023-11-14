@@ -54,9 +54,6 @@ class FlowScript:
         # Now, it is the responsibility of the interpreter to 'execute' those statements.
         interpreter = Interpreter()
         interpreter.interpret(statements)
-
-        # TO BE DELETED
-        # interpreter.print()
         
 
     @staticmethod

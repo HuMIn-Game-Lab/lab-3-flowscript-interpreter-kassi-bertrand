@@ -1,6 +1,6 @@
 // FlowScript Showcasing variable usage
 
- FlowScript {
+digraph FlowScript {
     compile_input = "{\"jobChannels\": 268435456, \"jobType\": 1, \"makefile\": \"./Data/testCode/Makefile\", \"isFilePath\": true}";
     parsing_input = "{\"jobChannels\": 536870912, \"jobType\": 2, \"content\": \"\"}";
 
