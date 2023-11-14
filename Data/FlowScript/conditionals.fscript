@@ -9,6 +9,7 @@ compile_input = "{\"jobChannels\": 268435456, \"jobType\": 1, \"makefile\": \"./
   C[jobType="COMPILE_JOB" shape=circle input=compile_input];
   D[jobType="COMPILE_JOB" shape=circle input=compile_input];
   
+  // ONLY JOB 'C' WILL GET QUEUED. SO YOU SHOULD SEE JOB A B and C in the QUEUE BUT NOT D
   conditional[jobType="CONDITIONAL" shape=diamond test="ALL_SUCCESS" if_true=C else=D];
 
   //E[jobType="COMPILE_JOB" shape=circle input=job_input];
