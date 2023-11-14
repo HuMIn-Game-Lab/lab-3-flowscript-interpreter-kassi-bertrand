@@ -28,7 +28,13 @@ class LogicalConditionalJob: public Job{
     bool EvaluateLogicalCondition() const;
 
     LogicalOperation m_logicalOperation;
-    int m_targetCount;
+
+    std::string m_if_true_job_type;
+    std::string m_else_type_job_type;
+    std::string m_if_true_json_input;
+    std::string m_else_json_input;
+
+    int m_targetCount = 1;
 
 
     json m_outputJson;

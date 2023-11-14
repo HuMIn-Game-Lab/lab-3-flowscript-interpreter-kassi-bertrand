@@ -2,6 +2,11 @@
 #include "../lib/jobsystem.h"
 
 #include<vector>
+#include <filesystem>
+#include <fstream>
+
+
+namespace fs = std::filesystem;
 
 //json data shape
 //  {
@@ -17,8 +22,14 @@
 // }
 LogicalConditionalJob::LogicalConditionalJob(const char* jsonData): Job(jsonData){
     json jsonObject = json::parse(jsonData);
-    m_logicalOperation = ParseLogicOperation(jsonObject.value("logicalOperation", "ALL_SUCCESS"));
-    m_targetCount = jsonObject.value("targetCount", 1);
+    
+    m_logicalOperation = ParseLogicOperation(jsonObject["logicalOperation"]);
+    m_if_true_job_type = jsonObject["if_true_job_type"];
+    m_else_type_job_type = jsonObject["else_type_job_type"];
+    m_if_true_json_input = jsonObject["if_true_input"];
+    m_else_json_input = jsonObject["else_input"];
+
+    // m_targetCount = jsonObject.value("targetCount", 1);
 }
 
 void LogicalConditionalJob::Execute(){
@@ -29,9 +40,12 @@ void LogicalConditionalJob::Execute(){
     
     if (EvaluateLogicalCondition()){
         // Conditional Met queue job
+        Job* job = JobSystem::CreateOrGet()->CreateJob(m_if_true_job_type, json::parse(m_if_true_json_input.c_str()));
+        JobSystem::CreateOrGet()->QueueJob(job);
     }
     else{
-        // Conditional not met queue another job for execution
+        Job* job = JobSystem::CreateOrGet()->CreateJob(m_else_type_job_type, json::parse(m_else_json_input.c_str()));
+        JobSystem::CreateOrGet()->QueueJob(job);
     }
 }
 
@@ -43,7 +57,7 @@ bool LogicalConditionalJob::EvaluateLogicalCondition() const{
     for(int jobId: dependencies){
         // Get the status of each dependency job
         json outputJson = JobSystem::CreateOrGet()->GetJsonJobOutputByID(jobId);
-        std::string status = outputJson.value("status", "failure");
+        std::string status = outputJson["status"];
         statuses.push_back(status);
     }
 
@@ -78,6 +92,25 @@ LogicalConditionalJob::LogicalOperation LogicalConditionalJob::ParseLogicOperati
 }
 
 void LogicalConditionalJob::JobCompleteCallback(){
+    // Write the output of this job, in the "Data" folder. NOTE: It is guaranteed to exist. But we never know
+    fs::path dataFolderPath = "./Data/";
+
+    if (!fs::exists(dataFolderPath)) {
+        fs::create_directories(dataFolderPath);
+        std::cout << "Subdirectory created: " << dataFolderPath << std::endl;
+    }
+
+    std::string fileName = "ConditionalJob-" + std::to_string(GetUniqueID()) + "-output.txt";
+    fs::path filePath = dataFolderPath / fileName;
+
+    std::ofstream file(filePath);
+    if (file.is_open()) {
+        file << "Conditional job ran successfully";
+        file.close();
+        // std::cout << "File created: " << filePath << std::endl;
+    } else {
+        std::cerr << "Failed to create the file: " << filePath << std::endl;
+    }
 
 }
 
