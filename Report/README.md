@@ -418,6 +418,36 @@ yields the following error:
 [line 1] Error at 'FlowScript': Opening brace expected
 ```
 
+If you try this code:
+
+```txt
+digraph FlowScript {
+  111 = "TEST"
+  var_2 = var_1;
+}
+```
+
+you get:
+
+```txt
+[line 2] Error at '111': Unexpected expression.
+```
+
+if you try this code:
+
+```txt
+digraph FlowScript {
+  var
+  var_2 = var_1;
+}
+```
+
+you get this error:
+
+```txt
+[line 2] Error at 'var': FlowScript does not allow identifier to be by themselves. They must be assigned a value if they are a variable, or used to identify a job
+```
+
 ### Runtime error
 
 A runtime error occurs when an error was not caught at compile time. Let's consider the same `dependency.fscript` file. Imagine that instead of the providing a valid JSON as input, we provided just an invalid JSON string like so:
