@@ -233,17 +233,76 @@ TokenType.EOF, , None
 
 The parser will now go through all of these tokens, and recognize the different types of statements that one can form in `FlowScript`. The parser will go on and detect statements like.
 
-- Job Declaration
-- Dependency relationship between two or more jobs
-- Variable declarations
-- Variable assignments.
+- Job Declaration statements
+- Dependency relationship statements
+- Variable declarations statements
+- Variable assignments statements
+- Block statements which can be any combination of the above statements
 
-Simply put, the parser implements the **BNF** rules of `FlowScript`.
+Simply put, the parser implements the **BNF** rules of `FlowScript`. And the technique the `FlowScript` employed to achieve the parsing is called **Recursive descent**. Though the technique is simple is was more than sufficient for this instance.
+
+Interestingly, using recursive descent did not require using complex parser generator tools like Yacc, Bison, or ANTLR. Despite its simplicity, the recursive descent parsers are fast, robust, and are great for error handling, as you will soon see. If the FlowScript interpreter was implemented in C++ we would appreciate its speed better. But for simplicity and sanity purposes, I decided to use Python, which makes it easy to write, but also explain the code like I am doing right now.
+
+But the main reason why I was encouraged to use a implement a recursive descent parser is because this parsing technique in multiple heavyweight production language implementations like GCC, V8(the JavaScript VM in Chrome), Roslyn( the C# compiler).
+
+The FlowScript parser falls into the category of a **top-down parser** because it starts from the top BNF rule, and words its way down into the nest rules, before reaching the leafs (or the terminal) rules. Because of this nature, implementing the BNF rules in the parser was straightforward. 
+
+The parser is implemented in the `fsParser.py` file. And the recursive descent starts is implemented in the `parse` function and looks like this:
+
+```py
+def parse(self):
+    statements = []
+
+    # This is the program entry point. It is also the beginning of the recursive descent.
+    if self.match(TokenType.DIGRAPH):
+        statements.append(self.flow_script_entry_point())
+    else:
+        print("Malformed entry point")
+    return statements
+```
+
+By the time the parsing the process ends, `statement` contains all types of statements and expressions that the user wrote. Spoiler, this array contains only 1 element. This is element is of type:
+
+```py
+<class 'Stmt.Block'>
+```
+And it's easy to see why because the entire FlowScript program is in a `digraph` statement like this:
+
+```txt
+digraph FlowScript {
+    // Your statements comes here
+}
+```
+
+And since the parser is recursive, this "Block" statement is the 'tip' of the syntax FlowScript Abstract Syntax Tree( AST ). If we were to traverse it, we would recursively find other type of statements inside this `Block` statement. We could even find `Block` within statements.
+
+### Interpretation and execution of statement
+
+This is the last part of the process and is acheived by the two little lines below:
+
+```py
+interpreter = Interpreter()
+interpreter.interpret(statements)
+```
+
+The interpreter grabs the statement produced by the parser, and recursively traverse it. For this interpreter, I did 
 
 ## Error detection and handling
+
+Now, let's talk about some error handling. Earlier, I said that recursive descent parsers were good at handling errors. Let's demonstrate some of that:
+
+
 
 ## Limitations
 
 - As of now, one cannot reuse functions in other `FlowScript` in other parts of the same file, or in other files. However, implementing this functionality should involve minimal additional work considering the foundations that have been lay out during this lab.
 
-- As of now, there is no built-in checks to prevent the users to create a circular dependency.
+- As of now, there are no built-in checks to prevent the users to create a circular dependency.
+
+- As of now, there are no built-in checks to prevent the users to create self-dependencies. Meaning there is nothing preventing the user from telling the interpreter that the job is dependent on itself. Thus the following statement should not be allowed.
+
+```txt
+A -> A
+```
+
+ALL of the limitations mentioned above will be addressed in the next iteration of the FlowScript interpreter.

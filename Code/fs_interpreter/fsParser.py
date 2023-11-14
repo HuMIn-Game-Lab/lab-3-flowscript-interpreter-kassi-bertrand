@@ -92,7 +92,6 @@ class Parser:
             return None
 
     def flow_script_entry_point(self):
-        # self.consume(TokenType.DIGRAPH, f"Expect 'digraph' keyword")
         self.consume_on_same_line(TokenType.FLOWSCRIPT, f"The entry point of FlowScript should be named 'FlowScript', you wrote {self.tokens[self.current].lexeme}")
         self.consume(TokenType.LEFT_BRACE, "Opening brace expected")
         return Stmt.Block(self.block())
