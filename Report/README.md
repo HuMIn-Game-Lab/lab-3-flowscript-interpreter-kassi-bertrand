@@ -285,13 +285,164 @@ interpreter = Interpreter()
 interpreter.interpret(statements)
 ```
 
-The interpreter grabs the statement produced by the parser, and recursively traverse it. For this interpreter, I did 
+The interpreter grabs the statement produced by the parser, and recursively traverse it. The code for the interpreter is within the `interpreter.py` file. The heart of the interpreter is this function:
+
+```py
+def interpret(self, statements: List[Stmt.Stmt]):
+    self.total = len(statements)
+    try:
+        for statement in statements:
+            self.execute(statement)
+
+        # Move jobs from the staging area to the job system.
+        self.schedule_jobs()
+    except runtimeError as error:
+        flowscript.FlowScript.runtime_error(error)
+```
+See how statements statements are recursively visited and "executed". I put "executed" between quotes because the interpreter does not immediately execute statements as soon as it sees them. Instead it processes them and move them a "staging area". This staging area is a data structure associating a unique identifier with the information of each job when the interpreter processed them.
+
+When all the statements in the code have been processed, then they are all scheduled in bulk on the job system. During this scheduling process, is where the execution chain is created.
+
+Since all the statements are examined by the interpreter before being executed on the job system, this interpreter falls into the **second approach**.
+
+As soon as the job are submitted, the interpreter gives you the hand 👋, through an interactive program you can see your jobs in the job system, and query their status, and finish them yourself if need be.
 
 ## Error detection and handling
 
-Now, let's talk about some error handling. Earlier, I said that recursive descent parsers were good at handling errors. Let's demonstrate some of that:
+Now, let's talk about some error handling. Earlier, I said that recursive descent parsers were good at handling errors. Let's demonstrate some of that. For purpose of demonstration, I put together some example FlowScript code in the `FlowScript` folder inside the `Data` folder of this repository
 
+On my machine, inside the repository, precisely in the ... folder I was able to run the flowscript interpreter using the following command:
 
+```sh
+python Code/fs_interpreter/flowscript.py ./Data/FlowScript/<file_name>.fscript
+```
+
+### Syntax errors
+
+The interpreter can detect syntax error. A syntax error here occurs when the user:
+
+- forgets a semicolon at the end of a statement
+- Does not initialize a variable.
+- Initialize a variable with anything other than a string
+- reassign a variable with another variable that does not exist
+- Reuse job identifiers.
+- Forget an opening or closing brace or brackets
+
+Let's consider the `variables.fscript` file which showcases variables usage:
+
+```txt
+digraph FlowScript {
+  var_1 = "TEST"
+  var_2 = var_1;
+}
+```
+Removing a semicolon at the end of `var_1 = "TEST";` yields the following error:
+
+```txt
+[line 2] Error at '"TEST"': Expect ';' at the end of statement
+```
+
+**NOTE**: After the errors is displayed, Python also displays the stack trace. You might have to scroll up a little bit before seeing the error from the FlowScript interpreter itself.
+
+If you fix, the semicolon but forget to put `FlowScript` which is, in the case of FlowScript, the equivalent of a main function you get this error:
+
+```txt
+[line 1] Error at 'digraph': The entry point of FlowScript should be named 'FlowScript', you wrote {
+```
+
+if you remove the line `var_1 = "TEST"`, and run the following code:
+```txt
+digraph FlowScript {
+  var_2 = var_1;
+}
+```
+
+you get this error:
+
+```txt
+[Line: 2]: Undefined variable 'var_1'.
+```
+
+Let consider another `dependency.fscript` file. It looks like this:
+
+```txt
+digraph FlowScript {
+    compile_input = "{\"jobChannels\": 268435456, \"jobType\": 1, \"makefile\": \"./Data/testCode/Makefile\", \"isFilePath\": true}";
+    parsing_input = "{\"jobChannels\": 536870912, \"jobType\": 2, \"content\": \"\"}";
+
+    A[jobType="COMPILE_JOB" shape=circle input=compile_input];
+    B[jobType="PARSING_JOB" shape=circle input=parsing_input];
+
+    A -> ; // ERROR HERE - A DEPENDENCY STATEMENT MUST INVOLVE TWO IDENTIFIERS
+}
+```
+
+running this gives you the following error:
+
+```txt
+[line 10] Error at '->': Expect target identifier in dependency
+```
+
+FlowScript requires that job identifier are unique. If you try to reuse the same identifier, the parser will not allow it. Consider this for instance:
+
+```txt
+digraph FlowScript {
+    compile_input = "{\"jobChannels\": 268435456, \"jobType\": 1, \"makefile\": \"./Data/testCode/Makefile\", \"isFilePath\": true}";
+    parsing_input = "{\"jobChannels\": 536870912, \"jobType\": 2, \"content\": \"\"}";
+
+    A[jobType="COMPILE_JOB" shape=circle input=compile_input];
+    A[jobType="PARSING_JOB" shape=circle input=parsing_input];
+}
+```
+
+If you try to run a FlowScript like that, you get this error:
+
+```txt
+[Line: 6]: Identifier 'A' is being reused. Identifiers must be unique
+```
+
+If you forget to open/close a bracket or a brace the parser will also let you know. Running this code:
+
+```txt
+digraph FlowScript // MISSING OPENING BRACE 
+  var_1 = "TEST";
+  var_2 = var_1;
+}
+
+```
+yields the following error:
+
+```txt
+[line 1] Error at 'FlowScript': Opening brace expected
+```
+
+### Runtime error
+
+A runtime error occurs when an error was not caught at compile time. Let's consider the same `dependency.fscript` file. Imagine that instead of the providing a valid JSON as input, we provided just an invalid JSON string like so:
+
+```txt
+// FlowScript Showcasing variable usage
+
+digraph FlowScript {
+    compile_input = "INVALID JSON";
+    parsing_input = "{\"jobChannels\": 536870912, \"jobType\": 2, \"content\": \"\"}";
+
+    A[jobType="COMPILE_JOB" shape=circle input=compile_input];
+    B[jobType="PARSING_JOB" shape=circle input=parsing_input];
+
+    A -> B;
+}
+```
+
+This is valid to the eyes of the FlowScript parser, but is not valid to the eyes of the interpreter who has to interact with the job system. If you try to run the above FlowScript the interpreter will yell at you with this:
+
+```txt
+[Line: 7]: The input of job 'A' must be a valid JSON string
+```
+
+The error says line 7 because when the interpreter tries to resolve `compile_input` it notices that it is not a valid `JSON`, so it cannot submit that job to the job system.
+
+I only showed one example, because at the time I am writing this, I am rushing against the clock, and if you look at the last commit will see.
 
 ## Limitations
 

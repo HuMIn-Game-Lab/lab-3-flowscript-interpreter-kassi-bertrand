@@ -1,5 +1,5 @@
 digraph FlowScript {
-  var_1 = "TEST";
+  var_1 = "TEST"
   var_2 = var_1;
 }
 
