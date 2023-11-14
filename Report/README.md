@@ -327,6 +327,8 @@ The interpreter can detect syntax error. A syntax error here occurs when the use
 - reassign a variable with another variable that does not exist
 - Reuse job identifiers.
 - Forget an opening or closing brace or brackets
+- Create a variable name starting with a number
+- Leave an identifier in the middle of code
 
 Let's consider the `variables.fscript` file which showcases variables usage:
 
@@ -444,7 +446,13 @@ The error says line 7 because when the interpreter tries to resolve `compile_inp
 
 I only showed one example, because at the time I am writing this, I am rushing against the clock, and if you look at the last commit will see.
 
+But I encourage you to use any of the FlowScript example in the `Data/FlowScript` folder and experiment. And see if you can break it. 🙂
+
+I left some examples with working FlowScript, and some with some errors so you can see the errors and determine if the error messages of the FlowScript interpreter are intuitive. They should be easy fixes, such as adding a semicolon at the end of a statement.
+
 ## Limitations
+
+This version of the interpreter is not perfect. Here are some known limitations.
 
 - As of now, one cannot reuse functions in other `FlowScript` in other parts of the same file, or in other files. However, implementing this functionality should involve minimal additional work considering the foundations that have been lay out during this lab.
 
@@ -455,5 +463,7 @@ I only showed one example, because at the time I am writing this, I am rushing a
 ```txt
 A -> A
 ```
+
+- When detecting an error, I would like to only display error from the FlowScript interpreter, and not the Python stack trace.
 
 ALL of the limitations mentioned above will be addressed in the next iteration of the FlowScript interpreter.

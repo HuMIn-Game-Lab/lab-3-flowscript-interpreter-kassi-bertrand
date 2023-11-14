@@ -2,14 +2,14 @@ digraph FlowScript {
 
     // Try to uncomment the commented line, you will get some errors
     compile_input = "{\"jobChannels\": 268435456, \"jobType\": 1, \"makefile\": \"./Data/testCode/Makefile\", \"isFilePath\": true}";
-    eli = compile_input;
+    reassignment = compile_input;
 
       subgraph car {
         // node [style=filled]; // Set default node style to filled for the subgraph
         // edge [style=dashed]; // Set default edge style to dashed for the subgraph
 
         A[jobType="COMPILE_JOB" shape=circle input=compile_input];
-        B[jobType="COMPILE_JOB" shape=circle input=eli];
+        B[jobType="COMPILE_JOB" shape=circle input=reassignment];
         C[jobType="COMPILE_JOB" shape=circle input=compile_input];
         D[jobType="COMPILE_JOB" shape=circle input=compile_input];
 
